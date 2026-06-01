@@ -1,0 +1,8 @@
+//
+// Created by kyleb on 5/31/2026.
+//
+
+#ifndef SHOWCASERENDERER_VK_LOADER_H
+#define SHOWCASERENDERER_VK_LOADER_H
+
+#endif //SHOWCASERENDERER_VK_LOADER_H

@@ -61,6 +61,7 @@ add_subdirectory(third_party/glm EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/tinyobjloader EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/vk-bootstrap EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/spirv-reflect EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
 
 # Imgui Needs Access to these Libraries
 # =============================================================
@@ -75,6 +76,7 @@ add_executable(ShowcaseRenderer ${SOURCE_FILES})
 # target_compile_definitions(ShowcaseRenderer PUBLIC TRACY_ENABLE)
 target_compile_definitions(ShowcaseRenderer PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 
+target_include_directories(ShowcaseRenderer PUBLIC src)
 target_precompile_headers(ShowcaseRenderer PUBLIC "<unordered_map>" "<vector>" "<iostream>" "<fstream>" "<string>" )
 
 # Link all the dependencies
@@ -87,4 +89,5 @@ target_link_libraries(ShowcaseRenderer PRIVATE
         tinyobjloader
         imgui
         stb_image
-        spirv-reflect-static)
+        spirv-reflect-static
+        fmt::fmt)

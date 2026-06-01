@@ -1,7 +1,16 @@
+/******************************
+ * Author: Kyle Bueche
+ ******************************/
+
 #include <iostream>
+#include "vk_engine.h"
 
 int main()
 {
+    VulkanEngine engine;
+    engine.init();
+    engine.run();
+    engine.cleanup();
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }
