@@ -14,7 +14,7 @@ public:
     bool _isInitialized{ false };
     int _frameNumber {0};
     bool stop_rendering{ false };
-    VKExtent2d _windowExtent{ 1700, 900 };
+    VKExtent2d _windowExtent{ 1600, 900 };
 
     struct SDL_Window* _window{ nullptr };
     static VulkanEngine& Get();
@@ -24,5 +24,6 @@ public:
     void draw(); // Draw loop
     void run(); // Main loop
 };
+
 
 #endif //SHOWCASERENDERER_VK_ENGINE_H
