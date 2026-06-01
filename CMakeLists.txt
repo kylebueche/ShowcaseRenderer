@@ -1,8 +1,43 @@
+# ===================================
 # Project Settings
-# ==================================
+# ===================================
 cmake_minimum_required(VERSION 3.22)
 project(ShowcaseRenderer CXX)
 set(CMAKE_CXX_STANDARD 20)
+
+# ===========================================================
+# Begin ImGui Project
+# ImGui Doesn't Have it's own CMakeLists.txt
+# ===========================================================
+project(imgui VERSION 1.90)
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+
+# ImGui Core
+set(IMGUI_SOURCES
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+)
+
+# Imgui Backend Implementation
+list(APPEND IMGUI_SOURCES
+        ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+# Make it a Static Library
+add_library(imgui STATIC ${IMGUI_SOURCES})
+
+# Expose .h files Upstream
+target_include_directories(imgui PUBLIC
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends
+)
+# ===========================================================
+# End ImGui Project
+# ===========================================================
 
 # Add Header Only Libraries
 add_library(stb_image INTERFACE)
@@ -25,7 +60,6 @@ add_subdirectory(third_party/VulkanMemoryAllocator EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/glm EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/tinyobjloader EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/vk-bootstrap EXCLUDE_FROM_ALL)
-add_subdirectory(third_party/imgui EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/spirv-reflect EXCLUDE_FROM_ALL)
 
 # Imgui Needs Access to these Libraries
