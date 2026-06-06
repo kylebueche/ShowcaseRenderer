@@ -28,8 +28,8 @@
         if (err)                                                           \
         {                                                                  \
             fmt::print("Detected Vulkan error: {}", string_VkResult(err)); \
-            abort();                                                       \
+            std::abort();                                                  \
         }                                                                  \
-    } while (0)                                                            \
+    } while (0)
 
 #endif //SHOWCASERENDERER_VK_TYPES_H
