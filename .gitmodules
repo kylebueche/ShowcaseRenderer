@@ -1,0 +1,37 @@
+[submodule "fmt"]
+    path = third_party/fmt
+    url = https://github.com/fmtlib/fmt.git
+
+[submodule "glm"]
+    path = third_party/glm
+    url = https://github.com/icaven/glm.git
+
+[submodule "imgui"]
+    path = third_party/imgui
+    url = https://github.com/ocornut/imgui.git
+
+[submodule "SDL"]
+    path = third_party/SDL
+    url = https://github.com/libsdl-org/SDL.git
+
+[submodule "SPIRV-Reflect"]
+    path = third_party/SPIRV-Reflect
+    url = https://github.com/KhronosGroup/SPIRV-Reflect.git
+
+[submodule "stb"]
+    path = third_party/stb
+    url = https://github.com/nothings/stb.git
+
+[submodule "tinyobjloader"]
+    path = third_party/tinyobjloader
+    url = https://github.com/tinyobjloader/tinyobjloader.git
+
+[submodule "vk-bootstrap"]
+    path = third_party/vk-bootstrap
+    url = https://github.com/charles-lunarg/vk-bootstrap.git
+
+[submodule "VulkanMemoryAllocator"]
+    path = third_party/VulkanMemoryAllocator
+    url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+
+
