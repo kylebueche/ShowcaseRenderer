@@ -13,6 +13,10 @@ namespace vkinit {
     VkCommandBufferBeginInfo command_buffer_begin_info(VkCommandBufferUsageFlags flags);
     VkFenceCreateInfo fence_create_info(VkFenceCreateFlags flags);
     VkSemaphoreCreateInfo semaphore_create_info(VkSemaphoreCreateFlags flags);
+    VkImageSubresourceRange image_subresource_range(VkImageAspectFlags aspectMask);
+    VkSemaphoreSubmitInfo semaphore_submit_info(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+    VkCommandBufferSubmitInfo command_buffer_submit_info(VkCommandBuffer cmd);
+    VkSubmitInfo2 submit_info(VkCommandBufferSubmitInfo* cmdInfo, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo);
 }
 
 

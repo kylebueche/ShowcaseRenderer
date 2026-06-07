@@ -3,12 +3,13 @@
 //
 
 #include "vk_engine.h"
+#include "vk_initializers.h"
+#include "vk_types.h"
+#include "vk_images.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-#include <vk_initializers.h>
-#include <vk_types.h>
 #include "VkBootstrap.h"
 
 #include <chrono>
@@ -51,6 +52,9 @@ void VulkanEngine::cleanup() {
 
         for (int i = 0; i < FRAME_OVERLAP; i++) {
             vkDestroyCommandPool(_device, _frames[i]._commandPool, nullptr);
+            vkDestroyFence(_device, _frames[i]._renderFence, nullptr);
+            vkDestroySemaphore(_device, _frames[i]._renderSemaphore, nullptr);
+            vkDestroySemaphore(_device, _frames[i]._swapchainSemaphore, nullptr);
         }
 
         destroy_swapchain();
@@ -82,6 +86,52 @@ void VulkanEngine::draw() {
 
     // Start the command buffer recording
     VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
+
+    // Transition the framebuffers.
+    VkImage img = _swapchainImages[swapchainImageIndex];
+    // Put the swapchain image into a writeable state.
+    vkutil::transition_image(cmd, img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
+    VkClearColorValue clearValue = {};
+    glm::vec3 clearColor = glm::vec3(abs(sin(_frameNumber / 120.0f)));
+    clearValue = { clearColor.r, clearColor.g, clearColor.b, 1.0 };
+
+    VkImageSubresourceRange clearRange = vkinit::image_subresource_range(VK_IMAGE_ASPECT_COLOR_BIT);
+    vkCmdClearColorImage(cmd, img, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+
+    // Transition the swapchain into presentable layout to display to the screen
+    vkutil::transition_image(cmd, img, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+    // Finalize Command Buffer
+    VK_CHECK(vkEndCommandBuffer(cmd));
+
+    // Prepare the submission for the queue
+    // Wait on the presenting semaphore
+    // Signal to the render semaphore to signal that rendering has finished
+
+    VkCommandBufferSubmitInfo cmdInfo = vkinit::command_buffer_submit_info(cmd);
+    VkSemaphoreSubmitInfo waitInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, get_current_frame()._swapchainSemaphore);
+    VkSemaphoreSubmitInfo signalInfo = vkinit::semaphore_submit_info(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, get_current_frame()._renderSemaphore);
+
+    VkSubmitInfo2 submitInfo = vkinit::submit_info(&cmdInfo, &signalInfo, &waitInfo);
+
+    // Submit command buffer to the queue and execute it.
+    // _renderFence will now block until the graphics commands finish execution.
+    VK_CHECK(vkQueueSubmit2(_graphicsQueue, 1, &submitInfo, get_current_frame()._renderFence));
+
+    // Actually present the image to the screen.
+    // Wait on the _renderSemaphre for this, because we need all drawing commands to be finished first.
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pNext = nullptr;
+    presentInfo.pSwapchains = &_swapchain;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pWaitSemaphores = &get_current_frame()._renderSemaphore;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pImageIndices = &swapchainImageIndex;
+    VK_CHECK(vkQueuePresentKHR(_graphicsQueue, &presentInfo));
+
+    _frameNumber++;
 }
 
 void VulkanEngine::run() {
@@ -106,6 +156,7 @@ void VulkanEngine::run() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
+        draw();
     }
 }
 

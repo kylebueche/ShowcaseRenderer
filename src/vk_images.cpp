@@ -3,11 +3,15 @@
 //
 
 #include "vk_images.h"
+#include "vk_initializers.h"
 
+// This implementation will work for most use cases,
+// but suffers from inefficiencies.
 void vkutil::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) {
     VkImageMemoryBarrier2 imageBarrier { .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
     imageBarrier.pNext = nullptr;
 
+    // Alternative stage masks can improve efficiency for specific use cases.
     imageBarrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
     imageBarrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
     imageBarrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;

@@ -69,7 +69,7 @@ target_link_libraries(imgui PRIVATE Vulkan::Vulkan SDL3::SDL3)
 
 # Gather Source Files
 # ===============================================
-file(GLOB SOURCE_FILES "src/*.cpp" "src/*.h")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h")
 add_executable(ShowcaseRenderer ${SOURCE_FILES})
 
 # What is Tracy? VKGuide is kind of incomplete..
