@@ -12,6 +12,9 @@
 
 #include "VkBootstrap.h"
 
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
+
 #include <chrono>
 #include <thread>
 
@@ -55,7 +58,9 @@ void VulkanEngine::cleanup() {
             vkDestroyFence(_device, _frames[i]._renderFence, nullptr);
             vkDestroySemaphore(_device, _frames[i]._renderSemaphore, nullptr);
             vkDestroySemaphore(_device, _frames[i]._swapchainSemaphore, nullptr);
+            _frames[i].deletionQueue.flush();
         }
+        mainDeletionQueue.flush();
 
         destroy_swapchain();
         vkDestroySurfaceKHR(_instance, _surface, nullptr);
@@ -71,6 +76,7 @@ void VulkanEngine::cleanup() {
 void VulkanEngine::draw() {
     // Wait until the GPU has finished rendering the last frame.
     VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true, 1000000000));
+    get_current_frame().deletionQueue.flush();
     VK_CHECK(vkResetFences(_device, 1, &get_current_frame()._renderFence));
     uint32_t swapchainImageIndex;
     VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._swapchainSemaphore, nullptr, &swapchainImageIndex));
@@ -213,10 +219,55 @@ void VulkanEngine::init_vulkan() {
     _graphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
     _graphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 
+    // Initialize the memory allocator
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.physicalDevice = _chosenGPU;
+    allocatorInfo.device = _device;
+    allocatorInfo.instance = _instance;
+    allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+    vmaCreateAllocator(&allocatorInfo, &_allocator);
+    mainDeletionQueue.push_function([&]()
+    {
+        vmaDestroyAllocator(_allocator);
+    });
 }
 
 void VulkanEngine::init_swapchain() {
     create_swapchain(_windowExtent.width, _windowExtent.height);
+    VkExtent3D drawImageExtent = {
+        _windowExtent.width,
+        _windowExtent.height,
+        1
+    };
+    _drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+    _drawImage.imageExtent = drawImageExtent;
+
+    VkImageUsageFlags drawImageUsages{};
+    drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_STORAGE_BIT;
+    drawImageUsages |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    VkImageCreateInfo rimg_info = vkinit::image_create_info(_drawImage.imageFormat, drawImageUsages, drawImageExtent);
+
+    // Allocate it from GPU local memory
+    VmaAllocationCreateInfo rimg_alloc_info = {};
+    rimg_alloc_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    rimg_alloc_info.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    // Allocate and create the image
+    vmaCreateImage(_allocator, &rimg_info, &rimg_alloc_info, &_drawImage.image, &_drawImage.allocation, nullptr);
+
+    // Build an image-view for the draw image to use for rendering
+    VkImageViewCreateInfo rview_info = vkinit::image_view_create_info(_drawImage.imageFormat, _drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+    VK_CHECK(vkCreateImageView(_device, &rview_info, nullptr, &_drawImage.imageView));
+
+    mainDeletionQueue.push_function([=]()
+    {
+        vkDestroyImageView(_device, _drawImage.imageView, nullptr);
+        vmaDestroyImage(_allocator, _drawImage.image, _drawImage.allocation);
+    });
+
 }
 
 void VulkanEngine::init_commands() {
