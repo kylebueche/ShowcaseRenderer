@@ -49,7 +49,6 @@ public:
 
     void init();
     void cleanup();
-    void draw(); // Draw loop
     void run(); // Main loop
 
 private:
@@ -62,6 +61,9 @@ private:
     void destroy_swapchain();
 
     FrameData& get_current_frame();
+
+    void draw(); // Draw skeleton
+    void draw_background(VkCommandBuffer cmd); // Draw commands
 
     // -- Engine State --
     bool isInitialized_ = false;

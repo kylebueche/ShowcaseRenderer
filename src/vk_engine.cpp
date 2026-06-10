@@ -97,23 +97,27 @@ void VulkanEngine::draw() {
     // The flag might help optimize by telling drivers our intended usage :D
     VkCommandBufferBeginInfo cmdBeginInfo = vkinit::command_buffer_begin_info(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
+    drawExtent_.width = windowExtent_.width;
+    drawExtent_.height = windowExtent_.height;
+
     // Start the command buffer recording
     VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
 
-    // Transition the framebuffers.
-    VkImage img = swapchainImages_[swapchainImageIndex];
-    // Put the swapchain image into a writeable state.
-    vkutil::transition_image(cmd, img, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-    VkClearColorValue clearValue = {};
-    glm::vec3 clearColor = glm::vec3(abs(sin(frameNumber_ / 120.0f)));
-    clearValue = { clearColor.r, clearColor.g, clearColor.b, 1.0 };
+    // Transition main draw image into general, drawable layout.
+    vkutil::transition_image(cmd, drawImage_.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-    VkImageSubresourceRange clearRange = vkinit::image_subresource_range(VK_IMAGE_ASPECT_COLOR_BIT);
-    vkCmdClearColorImage(cmd, img, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+    // Actual draw commands
+    draw_background(cmd);
 
-    // Transition the swapchain into presentable layout to display to the screen
-    vkutil::transition_image(cmd, img, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    // Copy the draw image to the current swapchain image
+    VkImage dstImage = swapchainImages_[swapchainImageIndex];
+    vkutil::transition_image(cmd, drawImage_.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    vkutil::transition_image(cmd, dstImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    vkutil::copy_image_to_image(cmd, drawImage_.image, dstImage, drawExtent_, swapchainExtent_);
+
+    // Transition the swapchain image to a presentable state
+    vkutil::transition_image(cmd, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
     // Finalize Command Buffer
     VK_CHECK(vkEndCommandBuffer(cmd));
@@ -145,6 +149,14 @@ void VulkanEngine::draw() {
     VK_CHECK(vkQueuePresentKHR(graphicsQueue_, &presentInfo));
 
     frameNumber_++;
+}
+
+void VulkanEngine::draw_background(VkCommandBuffer cmd) {
+    VkClearColorValue clearValue = {};
+    float flash = abs(sin(frameNumber_ / 120.0f));
+    clearValue = { 0.0, 0.0, flash, 1.0 };
+    VkImageSubresourceRange clearRange = vkinit::image_subresource_range(VK_IMAGE_ASPECT_COLOR_BIT);
+    vkCmdClearColorImage(cmd, drawImage_.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 }
 
 void VulkanEngine::run() {
