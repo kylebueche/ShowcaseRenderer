@@ -2,8 +2,8 @@
 // Created by kyleb on 5/31/2026.
 //
 
-#ifndef SHOWCASERENDERER_VK_ENGINE_H
-#define SHOWCASERENDERER_VK_ENGINE_H
+#ifndef SHOWCASERENDERER_VK_ENGINE_H_
+#define SHOWCASERENDERER_VK_ENGINE_H_
 
 #include "vk_types.h"
 #include "vk_initializers.h"
@@ -45,43 +45,12 @@ class VulkanEngine
 {
 public:
 
-    bool _isInitialized{ false };
-    int _frameNumber {0};
-    bool stop_rendering{ false };
-    VkExtent2D _windowExtent{ 1600, 900 };
-
-    struct SDL_Window* _window{ nullptr };
     static VulkanEngine& Get();
 
     void init();
     void cleanup();
     void draw(); // Draw loop
     void run(); // Main loop
-
-    VkInstance _instance; // Vulkan Library Handle
-    VkDebugUtilsMessengerEXT _debugMessenger; // Vulkan Debug Output Handle
-    VkPhysicalDevice _chosenGPU; // Physical GPU Selected
-    VkDevice _device; // Logical Vulkan Device for Commands
-    VkSurfaceKHR _surface; // Vulkan Window Surface
-
-    VkSwapchainKHR _swapchain;
-    VkFormat _swapchainImageFormat;
-
-    std::vector<VkImage> _swapchainImages;
-    std::vector<VkImageView> _swapchainImageViews;
-    VkExtent2D _swapchainExtent;
-
-    FrameData _frames[FRAME_OVERLAP];
-    FrameData& get_current_frame() { return _frames[_frameNumber % FRAME_OVERLAP]; }
-
-    VkQueue _graphicsQueue;
-    uint32_t _graphicsQueueFamily;
-
-    DeletionQueue mainDeletionQueue;
-    VmaAllocator _allocator;
-
-    AllocatedImage _drawImage;
-    VkExtent2D _drawExtent;
 
 private:
     void init_vulkan();
@@ -91,7 +60,44 @@ private:
 
     void create_swapchain(uint32_t width, uint32_t height);
     void destroy_swapchain();
+
+    FrameData& get_current_frame();
+
+    // -- Engine State --
+    bool isInitialized_ = false;
+    int frameNumber_ = 0;
+    bool pauseRendering_ = false;
+
+    // -- SDL / Windowing --
+    struct SDL_Window* window_ = nullptr;
+    VkExtent2D windowExtent_ = { .width=1600, .height=900 };
+    VkSurfaceKHR surface_ = nullptr; // Vulkan Window Surface
+
+    // -- Vulkan --
+    // Main
+    VkInstance instance_ = nullptr; // Vulkan Library Handle
+    VkDevice device_ = nullptr; // Logical Vulkan Device for Commands
+    VkPhysicalDevice chosenGpu_ = nullptr; // Physical GPU Selected
+    VkQueue graphicsQueue_ = nullptr;
+    uint32_t graphicsQueueFamily_ = 0;
+
+    // Debug
+    VkDebugUtilsMessengerEXT debugMessenger_ = nullptr;
+
+    // Swapchain
+    VkSwapchainKHR swapchain_ = nullptr;
+    VkFormat swapchainImageFormat_ = VK_FORMAT_UNDEFINED;
+    VkExtent2D swapchainExtent_ = { .width=0, .height=0 };
+    std::vector<VkImage> swapchainImages_;
+    std::vector<VkImageView> swapchainImageViews_;
+    FrameData frames_[FRAME_OVERLAP] = {};
+    AllocatedImage drawImage_ = {};
+    VkExtent2D drawExtent_ = {.width=0, .height=0};
+
+    // Memory Management
+    DeletionQueue mainDeletionQueue_ = {};
+    VmaAllocator allocator_ = nullptr;
 };
 
 
-#endif //SHOWCASERENDERER_VK_ENGINE_H
+#endif //SHOWCASERENDERER_VK_ENGINE_H_

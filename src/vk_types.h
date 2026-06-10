@@ -2,8 +2,8 @@
 // Created by kyleb on 5/31/2026.
 //
 
-#ifndef SHOWCASERENDERER_VK_TYPES_H
-#define SHOWCASERENDERER_VK_TYPES_H
+#ifndef SHOWCASERENDERER_VK_TYPES_H_
+#define SHOWCASERENDERER_VK_TYPES_H_
 
 #include <memory>
 #include <optional>
@@ -41,4 +41,4 @@ struct AllocatedImage
     VkFormat imageFormat;
 };
 
-#endif //SHOWCASERENDERER_VK_TYPES_H
+#endif //SHOWCASERENDERER_VK_TYPES_H_
