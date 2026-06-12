@@ -4,6 +4,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(ShowcaseRenderer CXX)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
 # ===========================================================
 # Begin ImGui Project
@@ -44,7 +45,65 @@ add_library(stb_image INTERFACE)
 target_include_directories(stb_image INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 
 # Find Local Vulkan Installation
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS glslc)
+find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
+# ============================================================
+# Compile Shaders
+# ============================================================
+set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+
+file(GLOB_RECURSE GLSL_SHADERS
+        # Generic/Nondescript:
+        ${SHADER_SOURCE_DIR}/*.glsl
+        # Common:
+        ${SHADER_SOURCE_DIR}/*.vert
+        ${SHADER_SOURCE_DIR}/*.frag
+        ${SHADER_SOURCE_DIR}/*.geom
+        ${SHADER_SOURCE_DIR}/*.comp
+        ${SHADER_SOURCE_DIR}/*.tesc
+        ${SHADER_SOURCE_DIR}/*.tese
+        # Alternate Common:
+        ${SHADER_SOURCE_DIR}/*.vs
+        ${SHADER_SOURCE_DIR}/*.fs
+        ${SHADER_SOURCE_DIR}/*.gs
+        # Mesh Shader Pipelines:
+        ${SHADER_SOURCE_DIR}/*.mesh
+        ${SHADER_SOURCE_DIR}/*.task
+        # Hardware Ray Tracing Pipelines:
+        ${SHADER_SOURCE_DIR}/*.rgen
+        ${SHADER_SOURCE_DIR}/*.rint
+        ${SHADER_SOURCE_DIR}/*.rahit
+        ${SHADER_SOURCE_DIR}/*.rchit
+        ${SHADER_SOURCE_DIR}/*.rmiss
+        ${SHADER_SOURCE_DIR}/*.rcall
+)
+
+set(SPV_SHADERS "")
+
+foreach(source IN LISTS GLSL_SHADERS)
+  get_filename_component(FILENAME ${source} NAME)
+  set(OUTPUT_SPV ${SHADER_BINARY_DIR}/${FILENAME}.spv)
+
+  add_custom_command(
+          OUTPUT ${OUTPUT_SPV}
+          # 1. Create the output directory safely right before compiling
+          COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_BINARY_DIR}
+          # 2. Compile the shader
+          COMMAND
+          ${glslc_executable}
+          -o ${OUTPUT_SPV}
+          ${source}
+          # Only depend on the actual source file, NOT the directory
+          DEPENDS ${source}
+          COMMENT "Compiling ${FILENAME}"
+  )
+  list(APPEND SPV_SHADERS ${OUTPUT_SPV})
+endforeach()
+
+# This target drives the generation of the individual SPV files
+add_custom_target(glsl_shaders ALL DEPENDS ${SPV_SHADERS})
+
 
 # SPIRV-Reflect Build Settings
 # ===============================================================================
@@ -91,3 +150,5 @@ target_link_libraries(ShowcaseRenderer PRIVATE
         stb_image
         spirv-reflect-static
         fmt::fmt)
+
+add_dependencies(ShowcaseRenderer glsl_shaders)

@@ -6,6 +6,8 @@
 #include "vk_initializers.h"
 #include "vk_types.h"
 #include "vk_images.h"
+#include "vk_descriptors.h"
+#include "vk_pipelines.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
@@ -39,18 +41,20 @@ void VulkanEngine::init() {
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
+    SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN;
 
     window_ = SDL_CreateWindow(
         "Vulkan Engine",
-        windowExtent_.width,
-        windowExtent_.height,
+        static_cast<int>(windowExtent_.width),
+        static_cast<int>(windowExtent_.height),
         window_flags);
 
     init_vulkan();
     init_swapchain();
     init_commands();
     init_sync_structures();
+    init_descriptors();
+    init_pipelines();
 
     isInitialized_ = true;
 }
@@ -157,9 +161,20 @@ void VulkanEngine::draw_background(VkCommandBuffer cmd) {
     clearValue = { 0.0, 0.0, flash, 1.0 };
     VkImageSubresourceRange clearRange = vkinit::image_subresource_range(VK_IMAGE_ASPECT_COLOR_BIT);
     vkCmdClearColorImage(cmd, drawImage_.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+
+    // Bind the gradient drawing compute pipeline
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gradientPipeline_);
+    // Bind the descriptor set containing the draw image to the compute pipeline
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gradientPipelineLayout_, 0, 1, &drawImageDescriptors_, 0, nullptr);
+    // Execute the compute pipeline dispatch.
+    // Group count is determined by image dimensions / workgroup size
+    vkCmdDispatch(cmd, std::ceil(drawExtent_.width / 16.0), std::ceil(drawExtent_.height / 16.0), 1);
+
 }
 
 void VulkanEngine::run() {
+    assert(loadedEngine != nullptr && "VulkanEngine has not been loaded!");
+
     SDL_Event e;
     bool bQuit = false;
 
@@ -316,6 +331,88 @@ void VulkanEngine::init_sync_structures() {
         VK_CHECK(vkCreateSemaphore(device_, &semaphoreCreateInfo, nullptr, &frames_[i]._swapchainSemaphore));
         VK_CHECK(vkCreateSemaphore(device_, &semaphoreCreateInfo, nullptr, &frames_[i]._renderSemaphore));
     }
+}
+
+void VulkanEngine::init_descriptors() {
+    std::vector<DescriptorAllocator::PoolSizeRatio> sizes = {
+        {
+            .type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+            .ratio = 1
+        }
+    };
+
+    globalDescriptorAllocator.init_pool(device_, 10, sizes);
+
+    {
+        DescriptorLayoutBuilder builder;
+        builder.add_binding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        drawImageDescriptorLayout_ = builder.build(device_, VK_SHADER_STAGE_COMPUTE_BIT, nullptr, 0);
+    }
+
+    drawImageDescriptors_ = globalDescriptorAllocator.allocate(device_, drawImageDescriptorLayout_);
+
+    VkDescriptorImageInfo imgInfo = {};
+    imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imgInfo.imageView = drawImage_.imageView;
+
+    VkWriteDescriptorSet drawImageWrite = {};
+    drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    drawImageWrite.pNext = nullptr;
+
+    drawImageWrite.dstBinding = 0;
+    drawImageWrite.dstSet = drawImageDescriptors_;
+    drawImageWrite.descriptorCount = 1;
+    drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    drawImageWrite.pImageInfo = &imgInfo;
+
+    vkUpdateDescriptorSets(device_, 1, &drawImageWrite, 0, nullptr);
+    mainDeletionQueue_.push_function([&]()
+    {
+        globalDescriptorAllocator.destroy_pool(device_);
+        vkDestroyDescriptorSetLayout(device_, drawImageDescriptorLayout_, nullptr);
+    });
+}
+
+void VulkanEngine::init_pipelines() {
+    init_background_pipelines();
+}
+
+void VulkanEngine::init_background_pipelines() {
+    VkPipelineLayoutCreateInfo computeLayout = {};
+    computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    computeLayout.pNext = nullptr;
+    computeLayout.pSetLayouts = &drawImageDescriptorLayout_;
+    computeLayout.setLayoutCount = 1;
+
+    VK_CHECK(vkCreatePipelineLayout(device_, &computeLayout, nullptr, &gradientPipelineLayout_));
+
+    VkShaderModule computeDrawShader;
+    if (!vkutil::load_shader_module("shaders/gradient.comp.spv", device_, &computeDrawShader)) {
+        fmt::print("Error when building the compute shader\n");
+    }
+
+    VkPipelineShaderStageCreateInfo stageInfo = {};
+    stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageInfo.pNext = nullptr;
+    stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stageInfo.module = computeDrawShader;
+    stageInfo.pName = "main";
+
+    VkComputePipelineCreateInfo computePipelineCreateInfo = {};
+    computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computePipelineCreateInfo.pNext = nullptr;
+    computePipelineCreateInfo.layout = gradientPipelineLayout_;
+    computePipelineCreateInfo.stage = stageInfo;
+
+    VK_CHECK(vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &gradientPipeline_));
+
+    vkDestroyShaderModule(device_, computeDrawShader, nullptr);
+
+    mainDeletionQueue_.push_function([&]()
+    {
+        vkDestroyPipelineLayout(device_, gradientPipelineLayout_, nullptr);
+        vkDestroyPipeline(device_, gradientPipeline_, nullptr);
+    });
 }
 
 void VulkanEngine::create_swapchain(uint32_t width, uint32_t height) {

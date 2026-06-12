@@ -7,6 +7,7 @@
 
 #include "vk_types.h"
 #include "vk_initializers.h"
+#include "vk_descriptors.h"
 
 #include <vk_mem_alloc.h>
 
@@ -51,11 +52,16 @@ public:
     void cleanup();
     void run(); // Main loop
 
+    DescriptorAllocator globalDescriptorAllocator;
+
 private:
     void init_vulkan();
     void init_swapchain();
     void init_commands();
     void init_sync_structures();
+    void init_descriptors();
+    void init_pipelines();
+    void init_background_pipelines();
 
     void create_swapchain(uint32_t width, uint32_t height);
     void destroy_swapchain();
@@ -73,21 +79,21 @@ private:
     // -- SDL / Windowing --
     struct SDL_Window* window_ = nullptr;
     VkExtent2D windowExtent_ = { .width=1600, .height=900 };
-    VkSurfaceKHR surface_ = nullptr; // Vulkan Window Surface
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE; // Vulkan Window Surface
 
     // -- Vulkan --
     // Main
-    VkInstance instance_ = nullptr; // Vulkan Library Handle
-    VkDevice device_ = nullptr; // Logical Vulkan Device for Commands
-    VkPhysicalDevice chosenGpu_ = nullptr; // Physical GPU Selected
-    VkQueue graphicsQueue_ = nullptr;
+    VkInstance instance_ = VK_NULL_HANDLE; // Vulkan Library Handle
+    VkDevice device_ = VK_NULL_HANDLE; // Logical Vulkan Device for Commands
+    VkPhysicalDevice chosenGpu_ = VK_NULL_HANDLE; // Physical GPU Selected
+    VkQueue graphicsQueue_ = VK_NULL_HANDLE;
     uint32_t graphicsQueueFamily_ = 0;
 
     // Debug
-    VkDebugUtilsMessengerEXT debugMessenger_ = nullptr;
+    VkDebugUtilsMessengerEXT debugMessenger_ = VK_NULL_HANDLE;
 
     // Swapchain
-    VkSwapchainKHR swapchain_ = nullptr;
+    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
     VkFormat swapchainImageFormat_ = VK_FORMAT_UNDEFINED;
     VkExtent2D swapchainExtent_ = { .width=0, .height=0 };
     std::vector<VkImage> swapchainImages_;
@@ -98,7 +104,11 @@ private:
 
     // Memory Management
     DeletionQueue mainDeletionQueue_ = {};
-    VmaAllocator allocator_ = nullptr;
+    VmaAllocator allocator_ = VK_NULL_HANDLE;
+    VkDescriptorSet drawImageDescriptors_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout drawImageDescriptorLayout_ = VK_NULL_HANDLE;
+    VkPipeline gradientPipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout gradientPipelineLayout_ = VK_NULL_HANDLE;
 };
 
 
