@@ -53,7 +53,7 @@ find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
 set(SHADER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 set(SHADER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
-file(GLOB_RECURSE GLSL_SHADERS
+file(GLOB_RECURSE GLSL_SHADERS CONFIGURE_DEPENDS
         # Generic/Nondescript:
         ${SHADER_SOURCE_DIR}/*.glsl
         # Common:
