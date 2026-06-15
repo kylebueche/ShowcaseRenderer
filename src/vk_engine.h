@@ -62,6 +62,7 @@ private:
     void init_descriptors();
     void init_pipelines();
     void init_background_pipelines();
+    void init_imgui();
 
     void create_swapchain(uint32_t width, uint32_t height);
     void destroy_swapchain();
@@ -70,6 +71,9 @@ private:
 
     void draw(); // Draw skeleton
     void draw_background(VkCommandBuffer cmd); // Draw commands
+    // ImGui
+    void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+    void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
     // -- Engine State --
     bool isInitialized_ = false;
@@ -109,6 +113,12 @@ private:
     VkDescriptorSetLayout drawImageDescriptorLayout_ = VK_NULL_HANDLE;
     VkPipeline gradientPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout gradientPipelineLayout_ = VK_NULL_HANDLE;
+
+    // -- ImGui --
+    VkFence immFence_ = VK_NULL_HANDLE;
+    VkCommandBuffer immCommandBuffer_ = VK_NULL_HANDLE;
+    VkCommandPool immCommandPool_ = VK_NULL_HANDLE;
+
 };
 
 

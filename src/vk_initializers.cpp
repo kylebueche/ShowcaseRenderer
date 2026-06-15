@@ -131,4 +131,32 @@ VkImageViewCreateInfo image_view_create_info(VkFormat format, VkImage image, VkI
     return info;
 }
 
+VkRenderingAttachmentInfo attachment_info(VkImageView view, VkClearValue* clear, VkImageLayout layout) {
+    VkRenderingAttachmentInfo colorAttachment = {};
+    colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    colorAttachment.pNext = nullptr;
+    colorAttachment.imageView = view;
+    colorAttachment.imageLayout = layout;
+    colorAttachment.loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+    if (clear) {
+        colorAttachment.clearValue = *clear;
+    }
+
+    return colorAttachment;
+}
+
+VkRenderingInfo rendering_info(VkExtent2D extent, VkRenderingAttachmentInfo* attachmentInfo) {
+    VkRenderingInfo renderInfo = {};
+    renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    renderInfo.pNext = nullptr;
+    renderInfo.renderArea.offset = {0, 0};
+    renderInfo.renderArea.extent = extent;
+    renderInfo.colorAttachmentCount = 1;
+    renderInfo.pColorAttachments = attachmentInfo;
+    renderInfo.layerCount = 1;
+    return renderInfo;
+}
+
 } // Namespace vkinit
