@@ -6,11 +6,11 @@ project(ShowcaseRenderer CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
+
 # ===========================================================
-# Begin ImGui Project
+# Begin ImGui
 # ImGui Doesn't Have it's own CMakeLists.txt
 # ===========================================================
-project(imgui VERSION 1.90)
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 
 # ImGui Core
@@ -37,7 +37,7 @@ target_include_directories(imgui PUBLIC
         ${IMGUI_DIR}/backends
 )
 # ===========================================================
-# End ImGui Project
+# End ImGui
 # ===========================================================
 
 # Add Header Only Libraries

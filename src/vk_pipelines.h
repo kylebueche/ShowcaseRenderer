@@ -7,6 +7,27 @@
 
 #include <vulkan/vulkan_core.h>
 
+class PipelineBuilder
+{
+public:
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineRasterizationStateCreateInfo rasterizer;
+    VkPipelineColorBlendAttachmentState colorBlendAttachment;
+    VkPipelineMultisampleStateCreateInfo multisampling;
+    VkPipelineLayout pipelineLayout;
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    VkPipelineRenderingCreateInfo renderInfo;
+    VkFormat colorAttachmentFormat;
+
+    PipelineBuilder() { clear(); }
+
+    void clear();
+
+    VkPipeline build_pipeline(VkDevice device);
+};
+
 namespace vkutil {
 bool load_shader_module(
     const char* filePath,

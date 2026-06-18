@@ -48,3 +48,9 @@ bool load_shader_module(
 }
 
 } // Namespace vkutil
+
+void PipelineBuilder::clear() {
+    // Clear all structs back to 0 with correct sType.
+    inputAssembly = {};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+}
