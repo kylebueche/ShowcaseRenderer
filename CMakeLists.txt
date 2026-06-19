@@ -47,6 +47,7 @@ target_include_directories(stb_image INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 # Find Local Vulkan Installation
 find_package(Vulkan REQUIRED COMPONENTS glslc)
 find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
+
 # ============================================================
 # Compile Shaders
 # ============================================================
@@ -131,7 +132,6 @@ target_link_libraries(imgui PRIVATE Vulkan::Vulkan SDL3::SDL3)
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h")
 add_executable(ShowcaseRenderer ${SOURCE_FILES})
 
-# What is Tracy? VKGuide is kind of incomplete..
 # target_compile_definitions(ShowcaseRenderer PUBLIC TRACY_ENABLE)
 target_compile_definitions(ShowcaseRenderer PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE GLM_FORCE_LEFT_HANDED)
 

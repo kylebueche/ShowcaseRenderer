@@ -1,6 +1,7 @@
-//
-// Created by kyleb on 6/6/2026.
-//
+// Copyright (c) 2026 Kyle Bueche.
+// Author: Kyle Bueche.
+// This project is licensed under the MIT Licence - see LICENSE.txt.
+// No warranty implied.
 
 #include "vk_images.h"
 #include "vk_initializers.h"

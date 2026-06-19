@@ -1,6 +1,7 @@
-//
-// Created by kyleb on 5/31/2026.
-//
+// Copyright (c) 2026 Kyle Bueche.
+// Author: Kyle Bueche.
+// This project is licensed under the MIT Licence - see LICENSE.txt.
+// No warranty implied.
 
 #ifndef SHOWCASERENDERER_VK_ENGINE_H_
 #define SHOWCASERENDERER_VK_ENGINE_H_
