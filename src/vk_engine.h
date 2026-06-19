@@ -31,12 +31,12 @@ struct DeletionQueue
 
 struct FrameData
 {
-    VkCommandPool _commandPool;
-    VkCommandBuffer _mainCommandBuffer;
+    VkCommandPool commandPool;
+    VkCommandBuffer mainCommandBuffer;
     // These names confuse me:
-    VkSemaphore _swapchainSemaphore; // Rendering waits on the swapchain to swap
-    VkSemaphore _renderSemaphore; // Swapping the swapchain waits on rendering to finish
-    VkFence _renderFence; // Wait for draw commands to finish before issuing new draw commands
+    VkSemaphore swapchainSemaphore; // Rendering waits on the swapchain to swap
+    VkSemaphore renderSemaphore; // Swapping the swapchain waits on rendering to finish
+    VkFence renderFence; // Wait for draw commands to finish before issuing new draw commands
     DeletionQueue deletionQueue;
 };
 
@@ -96,50 +96,49 @@ private:
     void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
     // -- Engine State --
-    bool isInitialized_ = false;
-    int frameNumber_ = 0;
-    bool pauseRendering_ = false;
+    bool isInitialized = false;
+    int frameNumber = 0;
+    bool pauseRendering = false;
 
     // -- SDL / Windowing --
-    struct SDL_Window* window_ = nullptr;
-    VkExtent2D windowExtent_ = { .width=1600, .height=900 };
-    VkSurfaceKHR surface_ = VK_NULL_HANDLE; // Vulkan Window Surface
+    struct SDL_Window* window = nullptr;
+    VkExtent2D windowExtent = { .width=1600, .height=900 };
+    VkSurfaceKHR surface = VK_NULL_HANDLE; // Vulkan Window Surface
 
     // -- Vulkan --
     // Main
-    VkInstance instance_ = VK_NULL_HANDLE; // Vulkan Library Handle
-    VkDevice device_ = VK_NULL_HANDLE; // Logical Vulkan Device for Commands
-    VkPhysicalDevice chosenGpu_ = VK_NULL_HANDLE; // Physical GPU Selected
-    VkQueue graphicsQueue_ = VK_NULL_HANDLE;
-    uint32_t graphicsQueueFamily_ = 0;
+    VkInstance instance = VK_NULL_HANDLE; // Vulkan Library Handle
+    VkDevice device = VK_NULL_HANDLE; // Logical Vulkan Device for Commands
+    VkPhysicalDevice chosenGpu = VK_NULL_HANDLE; // Physical GPU Selected
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
+    uint32_t graphicsQueueFamily = 0;
 
     // Debug
-    VkDebugUtilsMessengerEXT debugMessenger_ = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 
     // Swapchain
-    VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
-    VkFormat swapchainImageFormat_ = VK_FORMAT_UNDEFINED;
-    VkExtent2D swapchainExtent_ = { .width=0, .height=0 };
-    std::vector<VkImage> swapchainImages_;
-    std::vector<VkImageView> swapchainImageViews_;
-    FrameData frames_[FRAME_OVERLAP] = {};
-    AllocatedImage drawImage_ = {};
-    VkExtent2D drawExtent_ = {.width=0, .height=0};
+    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    VkFormat swapchainImageFormat = VK_FORMAT_UNDEFINED;
+    VkExtent2D swapchainExtent = { .width=0, .height=0 };
+    std::vector<VkImage> swapchainImages;
+    std::vector<VkImageView> swapchainImageViews;
+    FrameData frames[FRAME_OVERLAP] = {};
+    AllocatedImage drawImage = {};
+    VkExtent2D drawExtent = {.width=0, .height=0};
 
     // Memory Management
-    DeletionQueue mainDeletionQueue_ = {};
-    VmaAllocator allocator_ = VK_NULL_HANDLE;
-    VkDescriptorSet drawImageDescriptors_ = VK_NULL_HANDLE;
-    VkDescriptorSetLayout drawImageDescriptorLayout_ = VK_NULL_HANDLE;
-    VkPipeline gradientPipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout gradientPipelineLayout_ = VK_NULL_HANDLE;
+    DeletionQueue mainDeletionQueue = {};
+    VmaAllocator allocator = VK_NULL_HANDLE;
+    VkDescriptorSet drawImageDescriptors = VK_NULL_HANDLE;
+    VkDescriptorSetLayout drawImageDescriptorLayout = VK_NULL_HANDLE;
+    VkPipeline gradientPipeline = VK_NULL_HANDLE;
+    VkPipelineLayout gradientPipelineLayout = VK_NULL_HANDLE;
 
     // -- ImGui --
-    VkFence immFence_ = VK_NULL_HANDLE;
-    VkCommandBuffer immCommandBuffer_ = VK_NULL_HANDLE;
-    VkCommandPool immCommandPool_ = VK_NULL_HANDLE;
+    VkFence immFence = VK_NULL_HANDLE;
+    VkCommandBuffer immCommandBuffer = VK_NULL_HANDLE;
+    VkCommandPool immCommandPool = VK_NULL_HANDLE;
 
 };
-
 
 #endif //SHOWCASERENDERER_VK_ENGINE_H_
