@@ -35,3 +35,6 @@
     url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 
 
+[submodule "third_party/volk"]
+	path = third_party/volk
+	url = https://github.com/zeux/volk.git

@@ -160,4 +160,22 @@ VkRenderingInfo rendering_info(VkExtent2D extent, VkRenderingAttachmentInfo* att
     return renderInfo;
 }
 
+VkPipelineShaderStageCreateInfo pipeline_shader_stage_create_info(VkShaderStageFlagBits stage, VkShaderModule module) {
+    VkPipelineShaderStageCreateInfo stageInfo = {};
+    stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageInfo.pNext = nullptr;
+    stageInfo.stage = stage;
+    stageInfo.module = module;
+    stageInfo.pName = "main";
+    stageInfo.pSpecializationInfo = nullptr;
+    return stageInfo;
+}
+
+VkPipelineLayoutCreateInfo pipeline_layout_create_info() {
+    VkPipelineLayoutCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    return createInfo;
+}
+
 } // Namespace vkinit

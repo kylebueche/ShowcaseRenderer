@@ -83,6 +83,7 @@ private:
     void init_pipelines();
     void init_background_pipelines();
     void init_imgui();
+    void init_triangle_pipeline();
 
     void create_swapchain(uint32_t width, uint32_t height);
     void destroy_swapchain();
@@ -91,6 +92,7 @@ private:
 
     void draw(); // Draw skeleton
     void draw_background(VkCommandBuffer cmd); // Draw commands
+    void draw_geometry(VkCommandBuffer cmd); // Draw commands
     // ImGui
     void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
     void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
@@ -133,6 +135,10 @@ private:
     VkDescriptorSetLayout drawImageDescriptorLayout = VK_NULL_HANDLE;
     VkPipeline gradientPipeline = VK_NULL_HANDLE;
     VkPipelineLayout gradientPipelineLayout = VK_NULL_HANDLE;
+
+    // Rasterization Pipeline
+    VkPipelineLayout trianglePipelineLayout = VK_NULL_HANDLE;
+    VkPipeline trianglePipeline = VK_NULL_HANDLE;
 
     // -- ImGui --
     VkFence immFence = VK_NULL_HANDLE;

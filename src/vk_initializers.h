@@ -23,6 +23,8 @@ VkImageCreateInfo image_create_info(VkFormat format, VkImageUsageFlags usageFlag
 VkImageViewCreateInfo image_view_create_info(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
 VkRenderingAttachmentInfo attachment_info(VkImageView view, VkClearValue* clear, VkImageLayout layout);
 VkRenderingInfo rendering_info(VkExtent2D extent, VkRenderingAttachmentInfo* attachmentInfo);
+VkPipelineShaderStageCreateInfo pipeline_shader_stage_create_info(VkShaderStageFlagBits stage, VkShaderModule module);
+VkPipelineLayoutCreateInfo pipeline_layout_create_info();
 }
 
 
